@@ -1,6 +1,8 @@
 <?php
 
 session_start();
+include_once "../database/env.php";
+
 
 $name = $_REQUEST['username'];
 $email = $_REQUEST['email'];
@@ -20,7 +22,17 @@ if (empty($email)) {
 } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     // filter_var is the standard PHP way to check if an email is valid
     $errors['email_error'] = "Invalid email format.";
+}else if($email){
+    $query = "SELECT * FROM `users` WHERE email='$email' ";
+    $user = mysqli_query($db, $query);
+
+    if(mysqli_num_rows($user) > 0){
+    $errors['email_error'] = "This email is already exist.";
+
+    }
 }
+
+
 
 // 3. Password Validation
 if (empty($password)) {
@@ -44,10 +56,14 @@ if(count($errors) > 0){
   $_SESSION['form_errors'] = $errors;
   header("Location: ../register.php");
 }else{
-    include_once "../database/env.php";
+    
 
     $encPassword= password_hash($password, PASSWORD_BCRYPT);
-    $query= "INSERT INTO `users`( `name`, `email`, `password`) VALUES ('[$name]','[$email]','[$encPassword]')";
+    $query= "INSERT INTO `users`( `name`, `email`, `password`) VALUES ('$name','$email','$encPassword')";
 
-    mysqli_query($db, $query);
+    $res = mysqli_query($db, $query);
+
+    if($res){
+        header("Location: ../login.php");
+    }
 }
